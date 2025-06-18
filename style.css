@@ -1,0 +1,113 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+}
+ 
+/* Top bar */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+}
+.logo {
+  height: 50px;
+}
+.contact {
+  text-align: right;
+  font-size: 14px;
+  color: #003366;
+}
+ 
+/* Navbar */
+.navbar {
+  background-color: #003366;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+ 
+/* Menu PC */
+.menu {
+  list-style: none;
+  display: flex;
+  flex: 1;
+  justify-content: space-evenly;
+}
+.menu li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 10px 20px;
+  display: inline-block;
+  transition: background 0.3s;
+}
+.menu li a:hover {
+  background-color: #00509e;
+  border-radius: 5px;
+}
+ 
+/* Search PC */
+.search-pc {
+  display: block;
+}
+.search-pc input {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+}
+ 
+/* Search mobile */
+.search-mobile {
+  display: none;
+  position: relative;
+}
+.search-mobile button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: white;
+}
+#searchFormMobile {
+  display: none;
+}
+#searchFormMobile input {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+}
+ 
+/* Responsive */
+@media (max-width: 768px) {
+  .menu {
+    display: none;
+  }
+ 
+  .search-pc {
+    display: none;
+  }
+ 
+  .search-mobile {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+ 
+#searchFormMobile.show {
+    display: block;
+  }
+ 
+  #searchBtn.hide {
+    display: none;
+  }
+ 
+  .contact {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenTo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="top-bar">
+      <img src="logo.png" alt="Logo" class="logo">
+      <div class="contact">
+        <p>Địa chỉ: 123 Đường Công Nghệ, TP.HCM<br>Hotline: 0909 123 456</p>
+      </div>
+    </div>
+ 
+    <nav class="navbar">
+      <ul class="menu">
+        <li><a href="#">TRANG CHỦ</a></li>
+        <li><a href="#">SẢN PHẨM</a></li>
+        <li><a href="#">HỖ TRỢ</a></li>
+        <li><a href="#">LIÊN HỆ</a></li>
+      </ul>
+ 
+      <!-- Search for PC -->
+      <div class="search-box search-pc">
+        <form onsubmit="searchFunction(event)">
+          <input type="text" placeholder="Tìm kiếm..." id="searchInputPC">
+        </form>
+      </div>
+ 
+      <!-- Search for mobile -->
+      <div class="search-mobile">
+        <button id="searchBtn" onclick="toggleSearchMobile()">🔍</button>
+        <form id="searchFormMobile" onsubmit="searchFunction(event)">
+          <input type="text" placeholder="Tìm kiếm..." id="searchInputMobile">
+        </form>
+      </div>
+    </nav>
+  </header>
+ 
+  <script src="script.js"></script>
+</body>
+</html>

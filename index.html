@@ -181,7 +181,7 @@
   <!-- Nhạc cảnh báo -->
   <audio id="alarmSound" src="https://newsdayhealth.com/files/Galaxy-S24-Ultra-Autumn-In-Melbourne.mp3"></audio>
 
-  <h2>Lịch sử cảnh báo</h2>
+  <h2>Lịch sử cảnh báo</h2> <button onclick="clearHistory()">🗑️ Xoá lịch sử cảnh báo</button>
   <table id="historyTable">
     <thead>
       <tr>
@@ -322,7 +322,20 @@ function checkAndClearHistoryAt1130() {
 
 // Gọi kiểm tra mỗi giây
 setInterval(checkAndClearHistoryAt1130, 1000);
-
+    <script>
+function clearHistory() {
+  if (confirm("⚠️ Bạn có chắc chắn muốn xoá toàn bộ lịch sử?")) {
+    db.ref("history").remove()
+      .then(() => {
+        alert("✅ Đã xoá toàn bộ lịch sử!");
+        document.getElementById("historyTable").innerHTML = ""; // Cập nhật lại bảng
+      })
+      .catch(error => {
+        alert("❌ Lỗi khi xoá: " + error.message);
+      });
+  }
+    </script>
+}
   </script>
 
   <h1>🔮 Gieo Quẻ Đêm Nay</h1>

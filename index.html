@@ -329,7 +329,7 @@ function clearHistory() {
     db.ref("History").remove()
       .then(() => {
         alert("✅ Đã xoá toàn bộ lịch sử!");
-        document.getElementById("historyTable").innerHTML = ""; // Cập nhật lại bảng
+        //document.getElementById("historyTable").innerHTML = ""; // Cập nhật lại bảng
       })
       .catch(error => {
         alert("❌ Lỗi khi xoá: " + error.message);

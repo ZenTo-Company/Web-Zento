@@ -1,3 +1,4 @@
+<!--
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -133,5 +134,123 @@
     }
   </script>
 
+</body>
+</html>
+-->
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Giám sát báo động</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 30px; }
+    img { width: 200px; margin-top: 20px; }
+    #status { font-size: 24px; margin: 20px; color: red; }
+    table { width: 80%; margin: 30px auto; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+
+  <h1>Giám sát báo động</h1>
+  <div id="status">Đang kiểm tra...</div>
+  <img id="doorImage" src="door_closed.png" alt="Door status">
+
+  <!-- Nhạc cảnh báo -->
+  <audio id="alarmSound" src="https://newsdayhealth.com/files/Galaxy-S24-Ultra-Autumn-In-Melbourne.mp3"></audio>
+
+  <h2>Lịch sử cảnh báo</h2>
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Thời gian</th>
+        <th>Nội dung</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // ✅ Thay thế cấu hình Firebase
+firebaseConfig = {
+  apiKey: "AIzaSyDl8NTYpFWUHDZDqWPuDI2a6F8qtblVS38",
+  authDomain: "canhbaocodong.firebaseapp.com",
+  databaseURL: "https://canhbaocodong-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "canhbaocodong",
+  storageBucket: "canhbaocodong.firebasestorage.app",
+  messagingSenderId: "241089298513",
+  appId: "1:241089298513:web:79fb10c31b427840567870"
+};
+
+    // ✅ Khởi tạo Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const doorImage = document.getElementById("doorImage");
+    const statusText = document.getElementById("status");
+    const historyTableBody = document.getElementById("historyTable").getElementsByTagName("tbody")[0];
+    const alarmSound = document.getElementById("alarmSound");
+
+    let lastAlarmState = false;
+    let alarmPlayed = false;
+
+    // Lắng nghe alarm
+    db.ref("alarm").on("value", snapshot => {
+      const alarm = snapshot.val();
+      const now = new Date().toLocaleString();
+
+      if (alarm === true) {
+        doorImage.src = "door_open.png";
+        statusText.textContent = "🚨 Có người vào phòng!";
+
+        // Ghi lịch sử và phát nhạc CHỈ 1 LẦN khi từ false → true
+        if (lastAlarmState === false) {
+          const newEntry = {
+            time: now,
+            message: "Có người vào phòng!"
+          };
+          db.ref("History").push(newEntry);
+
+          // Phát nhạc cảnh báo 1 lần
+          if (!alarmPlayed) {
+            alarmSound.play();
+            alarmPlayed = true;
+          }
+        }
+
+      } else {
+        doorImage.src = "door_closed.png";
+        statusText.textContent = "✅ Cửa đang đóng.";
+        alarmPlayed = false; // Reset để lần sau có thể phát nhạc lại
+      }
+lastAlarmState = alarm;
+    });
+
+    // Truy vấn lịch sử
+    function loadHistory() {
+      db.ref("History").on("value", snapshot => {
+        const data = snapshot.val();
+        historyTableBody.innerHTML = "";
+        if (data) {
+          const entries = Object.values(data);
+          entries.forEach((entry, index) => {
+            const row = historyTableBody.insertRow();
+            row.insertCell(0).textContent = index + 1;
+            row.insertCell(1).textContent = entry.time || "-";
+            row.insertCell(2).textContent = entry.message || "-";
+          });
+        }
+      });
+    }
+
+    loadHistory();
+  </script>
 </body>
 </html>

@@ -215,17 +215,24 @@ db.ref("alarm").once("value").then(snapshot => {
 
       // Chỉ ghi nếu: từ false → true và cách lần ghi trước > 2000ms
       if (lastAlarmState === false && nowTime - lastLogTime > 2000) {
-        const newEntry = {
-          time: nowString,
-          message: "Có người vào phòng!"
-        };
-        db.ref("History").push(newEntry);
-        lastLogTime = nowTime;
-
         if (!alarmPlayed) {
-          alarmSound.play();
-          alarmPlayed = true;
-        }
+  alarmSound.currentTime = 0; // về đầu bài nhạc
+  alarmSound.play()
+    .then(() => {
+      console.log("🔊 Bắt đầu phát cảnh báo 10 giây...");
+      alarmPlayed = true;
+
+      // Dừng sau 10 giây
+      setTimeout(() => {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        console.log("🔕 Đã dừng âm thanh sau 10 giây.");
+      }, 10000); // 10000ms = 10 giây
+    })
+    .catch(err => {
+      console.warn("⚠️ Không phát được âm thanh:", err);
+    });
+}
       }
 
     } else {

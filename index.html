@@ -215,6 +215,12 @@ db.ref("alarm").once("value").then(snapshot => {
 
       // Chỉ ghi nếu: từ false → true và cách lần ghi trước > 2000ms
       if (lastAlarmState === false && nowTime - lastLogTime > 2000) {
+         const newEntry = {
+          time: nowString,
+          message: "Có người vào phòng!"
+        };
+        db.ref("History").push(newEntry);
+        lastLogTime = nowTime;
         if (!alarmPlayed) {
   alarmSound.currentTime = 0; // về đầu bài nhạc
   alarmSound.play()

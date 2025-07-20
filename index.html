@@ -157,7 +157,7 @@
   <img id="doorImage" src="door_closed.png" alt="Door status">
 
   <!-- Nhạc cảnh báo -->
-  <audio id="alarmSound" src="https://newsdayhealth.com/files/Galaxy-S24-Ultra-Autumn-In-Melbourne.mp3"></audio>
+  <audio id="alarmSound" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 
   <h2>Lịch sử cảnh báo</h2>
   <table id="historyTable">
@@ -240,20 +240,22 @@ db.ref("alarm").once("value").then(snapshot => {
 
     // Truy vấn lịch sử
     function loadHistory() {
-      db.ref("History").on("value", snapshot => {
-        const data = snapshot.val();
-        historyTableBody.innerHTML = "";
-        if (data) {
-          const entries = Object.values(data);
-          entries.forEach((entry, index) => {
-            const row = historyTableBody.insertRow();
-            row.insertCell(0).textContent = index + 1;
-            row.insertCell(1).textContent = entry.time || "-";
-            row.insertCell(2).textContent = entry.message || "-";
-          });
-        }
+  db.ref("History").on("value", snapshot => {
+    const data = snapshot.val();
+    historyTableBody.innerHTML = "";
+
+    if (data) {
+      const entries = Object.values(data).reverse(); // 🔁 Đảo ngược thứ tự
+
+      entries.forEach((entry, index) => {
+        const row = historyTableBody.insertRow();
+        row.insertCell(0).textContent = index + 1;
+        row.insertCell(1).textContent = entry.time || "-";
+        row.insertCell(2).textContent = entry.message || "-";
       });
     }
+  });
+}
 
     loadHistory();
 

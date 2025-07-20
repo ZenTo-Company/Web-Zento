@@ -326,7 +326,7 @@ setInterval(checkAndClearHistoryAt1130, 1000);
 
 function clearHistory() {
   if (confirm("⚠️ Bạn có chắc chắn muốn xoá toàn bộ lịch sử?")) {
-    db.ref("history").remove()
+    db.ref("History").remove()
       .then(() => {
         alert("✅ Đã xoá toàn bộ lịch sử!");
         document.getElementById("historyTable").innerHTML = ""; // Cập nhật lại bảng

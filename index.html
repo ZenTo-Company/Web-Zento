@@ -339,16 +339,20 @@ function clearHistory() {
     </script>
 
   <h1>🔮 Gieo Quẻ Đêm Nay</h1>
-  <img id="quayque" src="static.png" alt="Ống quẻ">
+  <table>
+    <tr>
+      <td><img id="quayque" src="static.png" alt="Ống quẻ"></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><button onclick="gieoQue()">A Di Đà Phật</button></td>
+      <td width = "500px"> <div id="result"></div></td>
+    </tr>
+  </table>
 
-  <div>
-    <button onclick="gieoQue()">Gieo Quẻ</button>
-  </div>
-
-  <div id="result"></div>
 
   <!-- Âm thanh gieo quẻ -->
-  <audio id="sound" src="sound/gieoque.mp3" preload="auto"></audio>
+  <audio id="sound" src="gieoque.mp3" preload="auto"></audio>
 
   <script>
     const results = [

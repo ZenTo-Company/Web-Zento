@@ -233,6 +233,7 @@ db.ref("alarm").once("value").then(snapshot => {
         alarmSound.pause();
         alarmSound.currentTime = 0;
         console.log("🔕 Đã dừng âm thanh sau 10 giây.");
+        window.location.href = "https://elearning.hoaphatdungquat.vn/Login";
       }, 10000); // 10000ms = 10 giây
     })
     .catch(err => {

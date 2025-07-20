@@ -149,6 +149,28 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; }
   </style>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #quayque {
+      width: 200px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    #result {
+      font-size: 18px;
+      padding: 20px;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
@@ -301,6 +323,48 @@ function checkAndClearHistoryAt1130() {
 // Gọi kiểm tra mỗi giây
 setInterval(checkAndClearHistoryAt1130, 1000);
 
+  </script>
+
+  <h1>🔮 Gieo Quẻ Đêm Nay</h1>
+  <img id="quayque" src="static.png" alt="Ống quẻ">
+
+  <div>
+    <button onclick="gieoQue()">Gieo Quẻ</button>
+  </div>
+
+  <div id="result"></div>
+
+  <!-- Âm thanh gieo quẻ -->
+  <audio id="sound" src="sound/gieoque.mp3" preload="auto"></audio>
+
+  <script>
+    const results = [
+      "🌑 Đêm nay trời không trăng không sao, hãy nhìn ra cửa sổ. Nếu bạn thấy trăng hoặc sao thì định mệnh đêm nay bạn bị cơ động ghé thăm!",
+      "📜 Nửa đêm tỉnh giấc mộng vàng, có ai ghé hỏi thăm nàng (chàng) ngủ chưa. Nhẹ nhàng người ấy khẽ đưa. Đây là biên bản kí nhanh đi tao còn về!",
+      "🌤️ Thiên thời địa lợi nhân hoà, đêm nay trời đẹp, yên bình, ngủ ngon!",
+      "🍃 Gió đưa bông cải về trời, đêm nay có đứa không mời tới thăm!",
+      "🏕️ Resort thanh vắng, đề phòng cơ động!"
+    ];
+
+    function gieoQue() {
+      document.getElementById("result").innerText = "";
+      document.getElementById("quayque").src = "loading.gif";
+
+      // Phát âm thanh gieo quẻ
+      const sound = document.getElementById("sound");
+      sound.currentTime = 0;
+      sound.play().catch(e => {
+        console.warn("⚠️ Không thể phát âm thanh tự động:", e);
+      });
+
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * results.length);
+        document.getElementById("quayque").src = "static.png";
+        document.getElementById("result").innerText = results[randomIndex];
+        sound.pause();
+        sound.currentTime = 0;
+      }, 5000); // 5 giây
+    }
   </script>
 </body>
 </html>

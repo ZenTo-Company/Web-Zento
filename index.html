@@ -137,8 +137,6 @@
 </body>
 </html>
 -->
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -198,40 +196,47 @@ firebaseConfig = {
     const historyTableBody = document.getElementById("historyTable").getElementsByTagName("tbody")[0];
     const alarmSound = document.getElementById("alarmSound");
 
-    let lastAlarmState = false;
-    let alarmPlayed = false;
+let lastAlarmState = null;
+let alarmPlayed = false;
+let lastLogTime = 0; // Thời gian log gần nhất (ms)
 
-    // Lắng nghe alarm
-    db.ref("alarm").on("value", snapshot => {
-      const alarm = snapshot.val();
-      const now = new Date().toLocaleString();
+db.ref("alarm").once("value").then(snapshot => {
+  lastAlarmState = snapshot.val();
 
-      if (alarm === true) {
-        doorImage.src = "door_open.png";
-        statusText.textContent = "🚨 Có người vào phòng!";
+  db.ref("alarm").on("value", snapshot => {
+    const alarm = snapshot.val();
+    const now = new Date();
+    const nowString = now.toLocaleString();
+    const nowTime = now.getTime(); // timestamp dạng số
 
-        // Ghi lịch sử và phát nhạc CHỈ 1 LẦN khi từ false → true
-        if (lastAlarmState === false) {
-          const newEntry = {
-            time: now,
-            message: "Có người vào phòng!"
-          };
-          db.ref("History").push(newEntry);
+    if (alarm === true) {
+      doorImage.src = "door_open.png";
+      statusText.textContent = "🚨 Có người vào phòng!";
 
-          // Phát nhạc cảnh báo 1 lần
-          if (!alarmPlayed) {
-            alarmSound.play();
-            alarmPlayed = true;
-          }
+      // Chỉ ghi nếu: từ false → true và cách lần ghi trước > 2000ms
+      if (lastAlarmState === false && nowTime - lastLogTime > 2000) {
+        const newEntry = {
+          time: nowString,
+          message: "Có người vào phòng!"
+        };
+        db.ref("History").push(newEntry);
+        lastLogTime = nowTime;
+
+        if (!alarmPlayed) {
+          alarmSound.play();
+          alarmPlayed = true;
         }
-
-      } else {
-        doorImage.src = "door_closed.png";
-        statusText.textContent = "✅ Cửa đang đóng.";
-        alarmPlayed = false; // Reset để lần sau có thể phát nhạc lại
       }
-lastAlarmState = alarm;
-    });
+
+    } else {
+      doorImage.src = "door_closed.png";
+      statusText.textContent = "✅ Cửa đang đóng.";
+      alarmPlayed = false;
+    }
+
+    lastAlarmState = alarm;
+  });
+});
 
     // Truy vấn lịch sử
     function loadHistory() {
@@ -251,6 +256,35 @@ lastAlarmState = alarm;
     }
 
     loadHistory();
+
+let historyClearedToday = false;
+
+function checkAndClearHistoryAt1130() {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+
+  if (hours === 11 && minutes === 30 && seconds === 0 && !historyClearedToday) {
+    db.ref("History").remove()
+      .then(() => {
+        console.log("🧹 Đã xóa History lúc 11:30:00");
+        historyClearedToday = true;
+      })
+      .catch((error) => {
+        console.error("❌ Lỗi khi xóa lịch sử:", error);
+      });
+  }
+
+  // Reset cờ sau 11:31 để chuẩn bị cho hôm sau
+  if (hours === 11 && minutes === 31 && seconds === 0) {
+    historyClearedToday = false;
+  }
+}
+
+// Gọi kiểm tra mỗi giây
+setInterval(checkAndClearHistoryAt1130, 1000);
+
   </script>
 </body>
 </html>

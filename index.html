@@ -341,11 +341,8 @@ function clearHistory() {
   <h1>🔮 Gieo Quẻ Đêm Nay</h1>
   <table>
     <tr width = 800px>
-      <td width = 300px><img id="quayque" src="static.png" alt="Ống quẻ"></td>
-      <td rowspan="2"><div id="result"></div></td>
-    </tr>
-    <tr>
-      <td width = 300px><button onclick="gieoQue()">A Di Đà Phật</button></td>
+      <td width = 300px><img id="quayque" src="static.png" alt="Ống quẻ"><br><button onclick="gieoQue()">A Di Đà Phật</button></td>
+      <td><div id="result"></div></td>
     </tr>
   </table>
 
@@ -363,7 +360,7 @@ function clearHistory() {
     ];
 
     function gieoQue() {
-      document.getElementById("result").innerText = "";
+      document.getElementById("result").innerText = "Kết quả sẽ hiện ở đây.";
       document.getElementById("quayque").src = "loading.gif";
 
       // Phát âm thanh gieo quẻ
@@ -375,7 +372,7 @@ function clearHistory() {
 
       setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * results.length);
-        document.getElementById("quayque").src = "static.png";
+        document.getElementById("result").innerText = "Xin hãy đợi...";
         document.getElementById("result").innerText = results[randomIndex];
         sound.pause();
         sound.currentTime = 0;

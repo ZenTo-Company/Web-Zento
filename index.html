@@ -393,11 +393,11 @@ function clearHistory() {
   const dbRef = firebase.database().ref();
 
 // Cập nhật giá trị hiển thị khi có thay đổi
-dbRef.child("/value").on("value", snapshot => {
+dbRef.child("/").on("value", snapshot => {
   const data = snapshot.val();
   if (data) {
-    document.getElementById("setpointValue").innerText = data.setpoint ?? "--";
-    document.getElementById("analogValue").innerText = data.analog ?? "--";
+    document.getElementById("setpointValue").innerText = data.threshold ?? "--";
+    document.getElementById("analogValue").innerText = data.value ?? "--";
   }
 });
 

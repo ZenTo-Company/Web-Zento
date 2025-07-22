@@ -379,5 +379,39 @@ function clearHistory() {
       }, 5000); // 5 giây
     }
   </script>
+
+<div>
+  <h3>📈 Giám sát cảm biến</h3>
+  <p>🔧 Ngưỡng cài đặt: <span id="setpointValue">--</span></p>
+  <p>📊 Giá trị cảm biến hiện tại: <span id="analogValue">--</span></p>
+
+  <label for="newSetpoint">Cập nhật ngưỡng tác động:</label>
+  <input type="number" id="newSetpoint" placeholder="Nhập giá trị...">
+  <button onclick="updateSetpoint()">Cập nhật</button>
+</div>
+<script>
+  const dbRef = firebase.database().ref();
+
+// Cập nhật giá trị hiển thị khi có thay đổi
+dbRef.child("/value").on("value", snapshot => {
+  const data = snapshot.val();
+  if (data) {
+    document.getElementById("setpointValue").innerText = data.setpoint ?? "--";
+    document.getElementById("analogValue").innerText = data.analog ?? "--";
+  }
+});
+
+// Hàm cập nhật ngưỡng cài đặt mới
+function updateSetpoint() {
+  const newValue = parseInt(document.getElementById("newSetpoint").value);
+  if (!isNaN(newValue)) {
+    dbRef.child("/threshold").set(newValue)
+      .then(() => alert("✅ Đã cập nhật ngưỡng thành công!"))
+      .catch(err => alert("❌ Lỗi khi cập nhật: " + err.message));
+  } else {
+    alert("⚠️ Vui lòng nhập giá trị hợp lệ!");
+  }
+}
+  </script>
 </body>
 </html>

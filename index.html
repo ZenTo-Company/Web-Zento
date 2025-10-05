@@ -39,7 +39,41 @@
     let pc;
 
     // --- 🔹 Hàm lấy ICE server từ Xirsys ---
-    async function getIceServers() {
+
+async function getIceServers() {
+  try {
+    const response = await fetch("https://global.xirsys.net/_turn/Tx-video", {
+      method: "PUT",
+      headers: {
+        "Authorization": "Basic " + btoa("NgoHuuCong:5f31e39e-a1ea-11f0-8c8f-0242ac130002"),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ format: "urls" })
+    });
+
+    const data = await response.json();
+    console.log("Xirsys response:", data);
+
+    // Kiểm tra kỹ và trả về đúng mảng
+    if (data && data.v && Array.isArray(data.v.iceServers)) {
+      return data.v.iceServers;
+    } else if (data.v && data.v.iceServers && typeof data.v.iceServers === "object") {
+      return [data.v.iceServers];
+    } else {
+      console.warn("Không lấy được ICE servers, dùng fallback STUN.");
+      return [{ urls: "stun:stun.l.google.com:19302" }];
+    }
+  } catch (err) {
+    console.error("Lỗi khi lấy ICE servers:", err);
+    return [{ urls: "stun:stun.l.google.com:19302" }];
+  }
+}
+
+
+
+
+    
+  /*  async function getIceServers() {
       const response = await fetch("https://global.xirsys.net/_turn/Tx-video", {
         method: "PUT",
         headers: {
@@ -50,7 +84,7 @@
       });
       const data = await response.json();
       return data.v.iceServers;
-    }
+    }*/
 
     // --- 🔹 Bắt đầu truyền video ---
     startBtn.onclick = async () => {
@@ -91,3 +125,4 @@
   </script>
 </body>
 </html>
+

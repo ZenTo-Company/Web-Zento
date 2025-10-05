@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xem video WebRTC</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: white; text-align: center; }
+    video { width: 90%; max-width: 480px; margin: 10px; border-radius: 8px; border: 2px solid #00bfff; }
+  </style>
+</head>
+<body>
+  <h2>🎥 Xem video từ thiết bị khác</h2>
+  <video id="remoteVideo" autoplay playsinline></video>
+
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyAkbjw_2bMSdup42uRB1wi8TQrGqJCQ-l0",
+  authDomain: "hc-iot-dbf11.firebaseapp.com",
+  projectId: "hc-iot-dbf11",
+  storageBucket: "hc-iot-dbf11.firebasestorage.app",
+  messagingSenderId: "172691277563",
+  appId: "1:172691277563:web:f92eb0fda0bbb02d1b125e"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const roomRef = db.ref("room1");
+
+    const remoteVideo = document.getElementById('remoteVideo');
+    let pc;
+
+    async function getIceServers() {
+      const response = await fetch("https://global.xirsys.net/_turn/Tx-video", {
+        method: "PUT",
+        headers: {
+          "Authorization": "Basic " + btoa("NgoHuuCong:5131e39e-a1ea-1110-8c8f-0242ac130002"),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ format: "urls" })
+      });
+      const data = await response.json();
+      return data.v.iceServers;
+    }
+
+    async function init() {
+      const iceServers = await getIceServers();
+      pc = new RTCPeerConnection({ iceServers });
+
+      pc.ontrack = e => {
+        remoteVideo.srcObject = e.streams[0];
+      };
+
+      // ICE gửi ngược lại Firebase
+      pc.onicecandidate = e => {
+        if (e.candidate) {
+          db.ref("room1/viewerCandidates").push(e.candidate.toJSON());
+        }
+      };
+
+      const snap = await roomRef.child("offer").get();
+      if (!snap.exists()) {
+        alert("Chưa có offer, hãy bật thiết bị phát trước!");
+        return;
+      }
+
+      const offer = snap.val();
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await roomRef.child("answer").set(answer);
+
+      // Nhận ICE từ người phát
+      roomRef.child("callerCandidates").on("child_added", snap => {
+        pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

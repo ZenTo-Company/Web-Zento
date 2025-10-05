@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const pc = new RTCPeerConnection({
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  iceServers: [{ urls: "stun:stun1.l.google.com:19302" }]
 });
 const remote = document.getElementById("remote");
 pc.ontrack = (e) => { remote.srcObject = e.streams[0]; };
@@ -45,4 +45,5 @@ onValue(ref(db, "candidate_sender"), async (snapshot) => {
 });
 </script>
 </body>
+
 </html>

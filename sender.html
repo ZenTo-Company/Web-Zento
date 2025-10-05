@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Sender</title></head>
+<body>
+<h2>📷 Sender (Camera)</h2>
+<video id="local" autoplay playsinline muted></video>
+
+<script type="module">
+// ===== Firebase =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0VGoxSAetZsT4pL8_Lu5yQQJqWz6TtDs",
+  authDomain: "hc-iot.firebaseapp.com",
+  databaseURL: "https://hc-iot.firebaseio.com",
+  projectId: "hc-iot",
+  storageBucket: "hc-iot.firebasestorage.app",
+  messagingSenderId: "117718755722",
+  appId: "1:117718755722:web:aa2c90d996732a941d4073",
+  measurementId: "G-3839TLTQNE"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ===== Xirsys ICE Servers =====
+iceServers: [{   urls: [ "stun:hk-turn1.xirsys.com" ]}, {   
+username: "KUtzWkclpPdSjRhQZkEXse0Vt7bOcESgrWcrpmKdvUpCy6SumdMC1ROfbv7xxKJfAAAAAGjia8NOZ29IdXVDb25n",   
+credential: "2bbc7df2-a1eb-11f0-aa13-0242ac120004",   
+urls: [       "turn:hk-turn1.xirsys.com:80?transport=udp",       
+"turn:hk-turn1.xirsys.com:3478?transport=udp",       
+"turn:hk-turn1.xirsys.com:80?transport=tcp",       
+"turn:hk-turn1.xirsys.com:3478?transport=tcp",       
+"turns:hk-turn1.xirsys.com:443?transport=tcp",       
+"turns:hk-turn1.xirsys.com:5349?transport=tcp"   
+]}
+]
+
+// ===== WebRTC setup =====
+const pc = new RTCPeerConnection({ iceServers });
+const localVideo = document.getElementById("local");
+
+navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(stream => {
+  localVideo.srcObject = stream;
+  stream.getTracks().forEach(track => pc.addTrack(track, stream));
+});
+
+pc.onicecandidate = e => {
+  if (e.candidate) set(ref(db, "candidate_sender"), e.candidate.toJSON());
+};
+
+// Create and send offer
+const offer = await pc.createOffer();
+await pc.setLocalDescription(offer);
+set(ref(db, "offer"), offer);
+
+// When answer arrives
+onValue(ref(db, "answer"), async snapshot => {
+  const ans = snapshot.val();
+  if (ans && !pc.currentRemoteDescription) {
+    await pc.setRemoteDescription(ans);
+  }
+});
+</script>
+</body>
+</html>

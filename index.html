@@ -2,53 +2,48 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>WebRTC + Firebase + Xirsys</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC Camera Stream - Firebase + Xirsys</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; }
-    video { width: 45%; border: 2px solid #ccc; margin: 10px; border-radius: 10px; }
+    body { font-family: sans-serif; background: #121212; color: white; text-align: center; }
+    video { width: 90%; max-width: 480px; margin: 10px; border-radius: 8px; border: 2px solid #00bfff; }
+    button { background: #00bfff; border: none; padding: 10px 20px; color: white; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h2>WebRTC Truyền hình ảnh (Firebase + Xirsys)</h2>
-  <p id="roleLabel"></p>
-  <video id="localVideo" autoplay playsinline muted></video>
-  <video id="remoteVideo" autoplay playsinline></video>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <h2>📡 Phát video qua WebRTC (Firebase + Xirsys)</h2>
+  <video id="localVideo" autoplay playsinline muted></video><br>
+  <button id="startBtn">Bắt đầu phát</button>
 
   <script>
-    // ✅ Thay thông tin Firebase của bạn vào đây
-  const firebaseConfig = { 
-  apiKey : "AIzaSyAkbjw_2bMSdup42uRB1wi8TQrGqJCQ-l0" , 
-  authDomain : "hc-iot-dbf11.firebaseapp.com" , 
-  projectId : "hc-iot-dbf11" , 
-  storageBucket : "hc-iot-dbf11.firebasestorage.app" , 
-  messagingSenderId : "172691277563" , 
-  appId : "1:172691277563:web:f92eb0fda0bbb02d1b125e" 
+    // --- 🔹 Cấu hình Firebase ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyAkbjw_2bMSdup42uRB1wi8TQrGqJCQ-l0",
+  authDomain: "hc-iot-dbf11.firebaseapp.com",
+  projectId: "hc-iot-dbf11",
+  storageBucket: "hc-iot-dbf11.firebasestorage.app",
+  messagingSenderId: "172691277563",
+  appId: "1:172691277563:web:f92eb0fda0bbb02d1b125e"
 };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ✅ Cấu hình Xirsys
-    const XIRSYS_URL = "https://global.xirsys.net/_turn/Tx-video";
-    const USERNAME = "NgoHuuCong";
-    const TOKEN = "5f31e39e-a1ea-11f0-8c8f-0242ac130002";
+    // --- 🔹 Biến toàn cục ---
+    const localVideo = document.getElementById('localVideo');
+    const startBtn = document.getElementById('startBtn');
+    const roomRef = db.ref('room1');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const role = urlParams.get("role") || "viewer";
-    document.getElementById("roleLabel").textContent = "Chế độ: " + role.toUpperCase();
+    let pc;
 
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
-    let pc, localStream;
-
+    // --- 🔹 Hàm lấy ICE server từ Xirsys ---
     async function getIceServers() {
-      const response = await fetch(XIRSYS_URL, {
+      const response = await fetch("https://global.xirsys.net/_turn/Tx-video", {
         method: "PUT",
         headers: {
-          "Authorization": "Basic " + btoa(USERNAME + ":" + TOKEN),
+          "Authorization": "Basic " + btoa("NgoHuuCong:5131e39e-a1ea-1110-8c8f-0242ac130002"),
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ format: "urls" })
@@ -57,63 +52,42 @@
       return data.v.iceServers;
     }
 
-    async function init() {
+    // --- 🔹 Bắt đầu truyền video ---
+    startBtn.onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      localVideo.srcObject = stream;
+
       const iceServers = await getIceServers();
       pc = new RTCPeerConnection({ iceServers });
 
-      pc.onicecandidate = (event) => {
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.onicecandidate = event => {
         if (event.candidate) {
-          const ref = db.ref("candidates/" + role);
-          ref.push(event.candidate.toJSON());
+          db.ref("room1/callerCandidates").push(event.candidate.toJSON());
         }
       };
 
-      pc.ontrack = (event) => {
-        remoteVideo.srcObject = event.streams[0];
-      };
+      // 🔹 Tạo offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await roomRef.set({ offer });
 
-      if (role === "sender") {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        localVideo.srcObject = localStream;
-        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        await db.ref("offer").set({ sdp: offer.sdp, type: offer.type });
-      }
-
-      if (role === "viewer") {
-  const offerSnap = await db.ref("offer").once("value");
-        const offer = offerSnap.val();
-        if (!offer) return alert("Chưa có offer từ sender!");
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await db.ref("answer").set({ sdp: answer.sdp, type: answer.type });
-      }
-
-      // Lắng nghe answer từ viewer
-      if (role === "sender") {
-        db.ref("answer").on("value", async (snap) => {
-          const ans = snap.val();
-          if (ans && !pc.currentRemoteDescription) {
-            await pc.setRemoteDescription(new RTCSessionDescription(ans));
-          }
-        });
-      }
-
-      // Lắng nghe ICE candidate từ phía bên kia
-      const otherRole = (role === "sender") ? "viewer" : "sender";
-      db.ref("candidates/" + otherRole).on("child_added", async (snap) => {
-        const data = snap.val();
-        await pc.addIceCandidate(new RTCIceCandidate(data));
+      // 🔹 Lắng nghe answer từ viewer
+      roomRef.child("answer").on("value", async snap => {
+        const answer = snap.val();
+        if (answer && !pc.currentRemoteDescription) {
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        }
       });
-    }
 
-    init();
+      // 🔹 ICE từ viewer
+      roomRef.child("viewerCandidates").on("child_added", snap => {
+        pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+      });
+
+      alert("📤 Offer đã gửi lên Firebase. Viewer có thể kết nối!");
+    };
   </script>
 </body>
 </html>
-
-

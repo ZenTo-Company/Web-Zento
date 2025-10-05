@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head><meta charset="utf-8"><title>Viewer</title></head>
 <body>
+<h2>📺 Viewer</h2>
 <video id="remote" autoplay playsinline></video>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
@@ -19,13 +22,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const pc = new RTCPeerConnection({
-  iceServers: [{ urls: "stun:stun1.l.google.com:19302" }]
-});
-const remote = document.getElementById("remote");
-pc.ontrack = (e) => { remote.srcObject = e.streams[0]; };
+const iceServers = [
+  {
+    urls: [
+      "stun:hk-turn1.xirsys.com",
+      "turn:hk-turn1.xirsys.com:80?transport=udp",
+      "turn:hk-turn1.xirsys.com:3478?transport=udp",
+      "turns:hk-turn1.xirsys.com:80?transport=tcp"
+      "turn:hk-turn1.xirsys.com:3478?transport=tcp",
+      "turns:hk-turn1.xirsys.com:443?transport=tcp",
+      "turns:hk-turn1.xirsys.com:5349?transport=tcp",
+    ],
+    username: "KUtzWkclpPdSjRhQZkEXse0Vt7bOcESgrWcrpmKdvUpCy6SumdMC1ROfbv7xxKJfAAAAAGjia8NOZ29IdXVDb25n",
+    credential: "2bbc7df2-a1eb-11f0-aa13-0242ac120004"
+  }
+];
 
-onValue(ref(db, "offer"), async (snapshot) => {
+const pc = new RTCPeerConnection({ iceServers });
+const remoteVideo = document.getElementById("remote");
+
+pc.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
+
+// Khi có offer từ sender
+onValue(ref(db, "offer"), async snapshot => {
   const offer = snapshot.val();
   if (offer) {
     await pc.setRemoteDescription(offer);
@@ -35,15 +54,15 @@ onValue(ref(db, "offer"), async (snapshot) => {
   }
 });
 
-pc.onicecandidate = (e) => {
+// Xử lý ICE candidate
+pc.onicecandidate = e => {
   if (e.candidate) set(ref(db, "candidate_viewer"), e.candidate.toJSON());
 };
 
-onValue(ref(db, "candidate_sender"), async (snapshot) => {
+onValue(ref(db, "candidate_sender"), async snapshot => {
   const c = snapshot.val();
   if (c) await pc.addIceCandidate(c);
 });
 </script>
 </body>
-
 </html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<body>
+<video id="remote" autoplay playsinline></video>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0VGoxSAetZsT4pL8_Lu5yQQJqWz6TtDs",
+  authDomain: "hc-iot.firebaseapp.com",
+  databaseURL: "https://hc-iot.firebaseio.com",
+  projectId: "hc-iot",
+  storageBucket: "hc-iot.firebasestorage.app",
+  messagingSenderId: "117718755722",
+  appId: "1:117718755722:web:aa2c90d996732a941d4073",
+  measurementId: "G-3839TLTQNE"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const pc = new RTCPeerConnection({
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+});
+const remote = document.getElementById("remote");
+pc.ontrack = (e) => { remote.srcObject = e.streams[0]; };
+
+onValue(ref(db, "offer"), async (snapshot) => {
+  const offer = snapshot.val();
+  if (offer) {
+    await pc.setRemoteDescription(offer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    set(ref(db, "answer"), answer);
+  }
+});
+
+pc.onicecandidate = (e) => {
+  if (e.candidate) set(ref(db, "candidate_viewer"), e.candidate.toJSON());
+};
+
+onValue(ref(db, "candidate_sender"), async (snapshot) => {
+  const c = snapshot.val();
+  if (c) await pc.addIceCandidate(c);
+});
+</script>
+</body>
+</html>
